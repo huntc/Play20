@@ -139,7 +139,10 @@ object Dependencies {
 
     "com.h2database" % "h2" % "1.3.168",
     "org.javassist" % "javassist" % "3.16.1-GA",
-    "org.pegdown" % "pegdown" % "1.1.0",
+    "org.pegdown" % "pegdown" % "1.1.0" excludeAll(ExclusionRule(organization = "asm")),
+      // asm is causing an issue for jacoco and other things that require it - it shouldn't be an sbt
+      // dependency. pegdown is being re-written in scala and will avoid using asm. Until then the above
+      // exclusion will break the use of dynamic doc generation in Play.
 
     "net.contentobjects.jnotify" % "jnotify" % "0.94")
 

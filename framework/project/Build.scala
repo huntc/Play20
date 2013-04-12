@@ -2,6 +2,8 @@ import sbt._
 import Keys._
 import com.typesafe.tools.mima.plugin.MimaPlugin.mimaDefaultSettings
 import com.typesafe.tools.mima.plugin.MimaKeys.previousArtifact
+import de.johoop.jacoco4sbt._
+import JacocoPlugin._
 
 object BuildSettings {
   import Resolvers._
@@ -60,6 +62,7 @@ object BuildSettings {
       .settings(playCommonSettings: _*)
       .settings(mimaDefaultSettings: _*)
       .settings(com.typesafe.sbtscalariform.ScalariformPlugin.defaultScalariformSettings: _*)
+      .settings(jacoco.settings: _*)
       .settings(playRuntimeSettings(name): _*)
   }
 
@@ -73,6 +76,7 @@ object BuildSettings {
     Project(name, file("src/" + dir))
       .settings(playCommonSettings: _*)
       .settings(com.typesafe.sbtscalariform.ScalariformPlugin.defaultScalariformSettings: _*)
+      .settings(jacoco.settings: _*)
       .settings(
         scalaVersion := buildScalaVersionForSbt,
         scalaBinaryVersion := CrossVersion.binaryScalaVersion(buildScalaVersionForSbt),
@@ -89,10 +93,10 @@ object Resolvers {
 
   import BuildSettings._
 
-  val typesafeReleases = "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
-  val typesafeSnapshots = "Typesafe Repository" at "http://repo.typesafe.com/typesafe/snapshots/"
-  val typesafeMavenReleases = "Typesafe Releases Repository" at "https://typesafe.artifactoryonline.com/typesafe/maven-releases/"
-  val typesafeMavenSnapshots = "Typesafe Snapshots Repository" at "https://typesafe.artifactoryonline.com/typesafe/maven-snapshots/"
+  val typesafeReleases = "Typesafe Releases Repository" at "http://repo.typesafe.com/typesafe/releases/"
+  val typesafeSnapshots = "Typesafe Snapshots Repository" at "http://repo.typesafe.com/typesafe/snapshots/"
+  val typesafeMavenReleases = "Typesafe Maven Releases Repository" at "https://typesafe.artifactoryonline.com/typesafe/maven-releases/"
+  val typesafeMavenSnapshots = "Typesafe Maven Snapshots Repository" at "https://typesafe.artifactoryonline.com/typesafe/maven-snapshots/"
   val typesafeIvyReleases = Resolver.url("Typesafe Ivy Releases Repository", url("https://typesafe.artifactoryonline.com/typesafe/ivy-releases/"))(Resolver.ivyStylePatterns)
   val typesafeIvySnapshots = Resolver.url("Typesafe Ivy Snapshots Repository", url("https://typesafe.artifactoryonline.com/typesafe/ivy-snapshots/"))(Resolver.ivyStylePatterns)
 
@@ -150,6 +154,7 @@ object PlayBuild extends Build {
       sourceGenerators in Compile <+= sourceManaged in Compile map PlayVersion,
       mappings in(Compile, packageSrc) <++= scalaTemplateSourceMappings,
       parallelExecution in Test := false,
+      parallelExecution in jacoco.Config := false,
       sourceGenerators in Compile <+= (dependencyClasspath in TemplatesCompilerProject in Runtime, packageBin in TemplatesCompilerProject in Compile, scalaSource in Compile, sourceManaged in Compile, streams) map ScalaTemplates
     ).dependsOn(SbtLinkProject, PlayExceptionsProject, TemplatesProject, IterateesProject, JsonProject)
 
@@ -192,7 +197,8 @@ object PlayBuild extends Build {
   lazy val PlayTestProject = PlayRuntimeProject("Play-Test", "play-test")
     .settings(
       libraryDependencies := testDependencies,
-      parallelExecution in Test := false
+      parallelExecution in Test := false,
+      parallelExecution in jacoco.Config := false
     ).dependsOn(PlayProject)
 
   lazy val SbtPluginProject = PlaySbtProject("SBT-Plugin", "sbt-plugin")

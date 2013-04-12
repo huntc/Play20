@@ -19,6 +19,10 @@ object ApplicationBuild extends Build {
     val main = play.Project(appName, appVersion, appDependencies)
       .settings(ScalariformPlugin.defaultScalariformSettings: _*)
       .settings(jacoco.settings: _*)
-      .settings(parallelExecution in jacoco.Config := false)
+      .settings(
+        parallelExecution in jacoco.Config := false,
+        jacoco.coveredSources in jacoco.Config += file("../../src/play/src/main/scala"),
+        jacoco.classesToCover in jacoco.Config += file("../../src/play/target/scala-2.10/classes")
+      )
 
 }
