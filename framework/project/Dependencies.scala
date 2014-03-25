@@ -122,6 +122,13 @@ object Dependencies {
   val templatesCompilerDependencies = scalaIoFile +:
     specsSbt.map(_ % "test")
 
+  private def sbtPluginDep(moduleId: ModuleID) = {
+    moduleId.extra(
+      "sbtVersion" -> BuildSettings.buildSbtVersionBinaryCompatible,
+      "scalaVersion" -> BuildSettings.buildScalaBinaryVersionForSbt
+    )
+  }
+
   val sbtDependencies = Seq(
     "org.scala-lang" % "scala-reflect" % BuildSettings.buildScalaVersionForSbt % "provided",
     "com.typesafe" % "config" % "1.0.2",
@@ -142,15 +149,12 @@ object Dependencies {
 
     "net.contentobjects.jnotify" % "jnotify" % "0.94",
 
-    "com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.4.0" extra("sbtVersion" -> BuildSettings.buildSbtVersionBinaryCompatible, "scalaVersion" -> BuildSettings.buildScalaBinaryVersionForSbt),
-    "com.github.mpeltonen" % "sbt-idea" % "1.5.1" extra("sbtVersion" -> BuildSettings.buildSbtVersionBinaryCompatible, "scalaVersion" -> BuildSettings.buildScalaBinaryVersionForSbt),
-    "com.typesafe.sbt" % "sbt-native-packager" % "0.6.4" extra("sbtVersion" ->  BuildSettings.buildSbtVersionBinaryCompatible, "scalaVersion" -> BuildSettings.buildScalaBinaryVersionForSbt),
+    sbtPluginDep("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.4.0"),
+    sbtPluginDep("com.github.mpeltonen" % "sbt-idea" % "1.5.1"),
+    sbtPluginDep("com.typesafe.sbt" % "sbt-native-packager" % "0.6.4"),
 
-    "com.typesafe" % "sbt-web" % "1.0.0-M1" extra("sbtVersion" ->  BuildSettings.buildSbtVersionBinaryCompatible, "scalaVersion" -> BuildSettings.buildScalaBinaryVersionForSbt),
-    "com.typesafe" % "sbt-webdriver" % "1.0.0-M1" extra("sbtVersion" ->  BuildSettings.buildSbtVersionBinaryCompatible, "scalaVersion" -> BuildSettings.buildScalaBinaryVersionForSbt),
-    "com.typesafe" % "sbt-js-engine" % "1.0.0-M1" extra("sbtVersion" ->  BuildSettings.buildSbtVersionBinaryCompatible, "scalaVersion" -> BuildSettings.buildScalaBinaryVersionForSbt)
-    ) ++
-    specsSbt
+    sbtPluginDep("com.typesafe.sbt" % "sbt-js-engine" % "1.0.0-SNAPSHOT")
+  ) ++ specsSbt
 
   val playDocsDependencies = Seq(
     "com.typesafe.play" %% "play-doc" % "1.0.5",

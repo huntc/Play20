@@ -10,10 +10,9 @@ import com.typesafe.sbt.SbtNativePackager._
 import com.typesafe.sbt.packager.Keys._
 import java.io.{ Writer, PrintWriter }
 import play.console.Colors
-import com.typesafe.web.sbt.WebPlugin
-import com.typesafe.jse.sbt.JsEnginePlugin
-import com.typesafe.webdriver.sbt.WebDriverPlugin
-import com.typesafe.web.sbt.WebPlugin.WebKeys
+import com.typesafe.sbt.web.SbtWebPlugin
+import com.typesafe.sbt.jse.SbtJsTaskPlugin
+import com.typesafe.sbt.web.SbtWebPlugin.WebKeys._
 
 trait Settings {
   this: PlayCommands with PlayPositionMapper with PlayRun with PlaySourceGenerators =>
@@ -46,9 +45,8 @@ trait Settings {
   }
 
   lazy val defaultSettings =
-    WebPlugin.webSettings ++
-      WebDriverPlugin.webDriverSettings ++
-      JsEnginePlugin.jsEngineSettings ++
+    SbtWebPlugin.webSettings ++
+      SbtJsTaskPlugin.jsEngineAndTaskSettings ++
       Seq[Setting[_]](
 
         scalaVersion := play.core.PlayVersion.scalaVersion,
@@ -134,8 +132,6 @@ trait Settings {
 
         shellPrompt := playPrompt,
 
-        copyResources in Compile <<= (copyResources in Compile, playCopyAssets) map { (r, pr) => r ++ pr },
-
         mainClass in (Compile, run) := Some("play.core.server.NettyServer"),
 
         compile in (Compile) <<= PostCompile(scope = Compile),
@@ -212,8 +208,6 @@ trait Settings {
 
         packageBin in Compile <<= (packageBin in Compile).dependsOn(buildRequire),
 
-        resourceGenerators in Compile <+= LessCompiler,
-        resourceGenerators in Compile <+= CoffeescriptCompiler,
         resourceGenerators in Compile <+= JavascriptCompiler(fullCompilerOptions = None),
 
         lessEntryPoints <<= (sourceDirectory in Compile)(base => ((base / "assets" ** "*.less") --- base / "assets" ** "_*")),
@@ -225,11 +219,23 @@ trait Settings {
         closureCompilerOptions := Seq.empty[String],
 
         // sbt-web
-        sourceDirectory in WebKeys.Assets := (sourceDirectory in Compile).value / "assets",
-        WebKeys.jsFilter in WebKeys.Assets := new PatternFilter("""[^_].*\.js""".r.pattern),
-        resourceDirectory in WebKeys.Assets := (baseDirectory in Compile).value / "public",
-        resourceManaged in WebKeys.Assets := (classDirectory in Compile).value / "public",
-        lessEntryPoints := file(""),
+        sourceDirectory in Assets := (sourceDirectory in Compile).value / "assets",
+        sourceDirectory in TestAssets := (sourceDirectory in Test).value / "assets",
+
+        jsFilter in Assets := new PatternFilter("""[^_].*\.js""".r.pattern),
+        resourceDirectory in Assets := baseDirectory.value / "public",
+
+        // We move public in assets because we want it to have a parent directory that just has "public" in it, so that
+        // we can add it straight to the classpath
+        public in Assets := webTarget.value / "public" / "main" / "public",
+        products in Compile += {
+          (assets in Assets).value
+          webTarget.value / "public" / "main"
+        },
+        products in Runtime += {
+          (assets in Assets).value
+          webTarget.value / "public" / "main"
+        },
 
         // Settings
 
